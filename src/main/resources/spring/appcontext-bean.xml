@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <bean id="refundConsumer" factory-bean="consumerFactoryForBasePay" factory-method="createConsumer"
+          init-method="start">
+        <constructor-arg>
+            <bean class="com.dianping.swallow.common.message.Destination" factory-method="topic">
+                <constructor-arg value="Orderdish_Refund_Result"/>
+            </bean>
+        </constructor-arg>
+        <constructor-arg value="orderdish_cashier_refund"/><!-- consumerId -->
+        <constructor-arg ref="consumerConfigForBase"/>
+        <property name="listener" ref="baseRefundReceiptListener"/>
+    </bean>
+
+</beans>
