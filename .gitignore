@@ -1,0 +1,10 @@
+/bin
+/target/
+
+.gitignore
+
+
+
+SimpleBeanFactory.iml
+
+/.idea/
