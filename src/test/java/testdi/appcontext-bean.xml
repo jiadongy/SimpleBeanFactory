@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="mainFactory" class="testdi.Main"/>
+    <bean id="main2" class="testdi.Main2">
+        <property name="dep" value="main2"/>
+    </bean>
+    <bean id="main" factory-bean="mainFactory" factory-method="factoryMethod" init-method="init">
+        <constructor-arg>
+            <bean class="testdi.Main3"/>
+        </constructor-arg>
+        <property name="aBoolean" value="true"/>
+        <property name="aChar" value="z"/>
+        <property name="main2" ref="main2"/>
+    </bean>
+
+</beans>

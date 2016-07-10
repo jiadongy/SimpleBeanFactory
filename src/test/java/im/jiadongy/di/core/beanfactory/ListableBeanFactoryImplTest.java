@@ -1,5 +1,6 @@
 package im.jiadongy.di.core.beanfactory;
 
+import im.jiadongy.di.xml.BeanDefinitionXMLParser;
 import org.junit.Test;
 
 import java.io.File;
@@ -14,7 +15,7 @@ public class ListableBeanFactoryImplTest {
 
     @Test
     public void parse() throws Exception {
-        beanFactory.parse(new File("/Users/jiadongy/simple-di-framework/src/main/resources/spring/appcontext-bean.xml"));
+        beanFactory.loadBeanDefinition(new BeanDefinitionXMLParser(beanFactory), new File("/Users/jiadongy/simple-di-framework/src/main/resources/spring/appcontext-bean.xml"));
     }
 
 }

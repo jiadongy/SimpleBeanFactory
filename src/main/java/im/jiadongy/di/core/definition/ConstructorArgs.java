@@ -5,10 +5,33 @@ package im.jiadongy.di.core.definition;
  */
 public class ConstructorArgs {
 
-    private boolean isBean;
+    public static final int VALUE = 0;
+    public static final int PROPERTY = 1;
+    public static final int BEAN_REF = 2;
+    public static final int BEAN_DIFINITION = 3;
+
+
+    private int type = VALUE;
     private String value;
     private String ref;
     private BeanDefinition definition;
+    private Property property;
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public Property getProperty() {
+        return property;
+    }
+
+    public void setProperty(Property property) {
+        this.property = property;
+    }
 
     public BeanDefinition getDefinition() {
         return definition;
@@ -18,13 +41,6 @@ public class ConstructorArgs {
         this.definition = definition;
     }
 
-    public boolean isBean() {
-        return isBean;
-    }
-
-    public void setBean(boolean bean) {
-        isBean = bean;
-    }
 
     public String getValue() {
         return value;

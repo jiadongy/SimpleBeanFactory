@@ -24,6 +24,8 @@ public class BeanDefinition {
 
     private List<ConstructorArgs> constructorArgs = new ArrayList<>();
 
+    private boolean innerBean;
+
     public List<ConstructorArgs> getConstructorArgs() {
         return constructorArgs;
     }
@@ -86,6 +88,14 @@ public class BeanDefinition {
 
     public void setInitMethod(String initMethod) {
         this.initMethod = initMethod;
+    }
+
+    public boolean isInnerBean() {
+        return innerBean;
+    }
+
+    public void setInnerBean(boolean innerBean) {
+        this.innerBean = innerBean;
     }
 }
 

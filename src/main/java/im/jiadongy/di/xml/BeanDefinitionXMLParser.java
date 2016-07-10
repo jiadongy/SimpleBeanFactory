@@ -1,6 +1,7 @@
 package im.jiadongy.di.xml;
 
-import im.jiadongy.di.core.beanfactory.BeanFactory;
+import com.google.common.base.Strings;
+import im.jiadongy.di.core.beanfactory.BeanDefinitionManager;
 import im.jiadongy.di.core.definition.BeanDefinition;
 import im.jiadongy.di.core.definition.ConstructorArgs;
 import im.jiadongy.di.core.definition.Property;
@@ -20,16 +21,18 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import static im.jiadongy.di.core.definition.ConstructorArgs.*;
+
 /**
  * Created by jiadongy on 16/7/8.
  */
-public class BeanDefinitionXMLParser {
+public class BeanDefinitionXMLParser implements BeanDefinitionParser {
 
     static DocumentBuilder documentBuilder;
-    private BeanFactory beanFactory;
+    private BeanDefinitionManager beanDefinitionManager;
 
-    public BeanDefinitionXMLParser(BeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
+    public BeanDefinitionXMLParser(BeanDefinitionManager beanDefinitionManager) {
+        this.beanDefinitionManager = beanDefinitionManager;
     }
 
     private DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
@@ -38,6 +41,7 @@ public class BeanDefinitionXMLParser {
         return documentBuilder;
     }
 
+    @Override
     public Set<BeanDefinition> parse(File xmlFile) throws IOException, SAXException, ParserConfigurationException, SimpleDIException {
         Set<BeanDefinition> result = parseRoot(xmlFile);
         return result;
@@ -55,7 +59,7 @@ public class BeanDefinitionXMLParser {
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
                 if (element.getTagName().equalsIgnoreCase("bean")) {
-                    //parse bean element
+                    //loadBeanDefinition bean element
                     BeanDefinition definition = parseBeanNode(element);
                     if (definition != null)
                         definitions.add(definition);
@@ -72,7 +76,7 @@ public class BeanDefinitionXMLParser {
 
         BeanDefinition definition;
         if (StringUtils.isBlank(element.getAttribute("id"))) {
-            definition = beanFactory.getBeanDefinitionById(element.getAttribute("id"));
+            definition = beanDefinitionManager.getBeanDefinitionById(element.getAttribute("id"));
             if (definition != null)
                 return definition;
         }
@@ -81,6 +85,8 @@ public class BeanDefinitionXMLParser {
 
         definition.setId(element.getAttribute("id"));
         definition.setClazz(element.getAttribute("class"));
+
+        definition.setInnerBean(Strings.isNullOrEmpty(definition.getId()) && !Strings.isNullOrEmpty(definition.getClazz()));
 
         definition.setInitMethod(element.getAttribute("init-method"));
 
@@ -136,7 +142,7 @@ public class BeanDefinitionXMLParser {
             if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE && nodeList.item(i).getNodeName().equalsIgnoreCase("bean")) {
                 Element e = (Element) nodeList.item(i);
                 BeanDefinition definition = parseBeanNode(e);
-                info.setBean(true);
+                info.setType(BEAN_DIFINITION);
                 info.setDefinition(definition);
                 return info;
             }
@@ -150,7 +156,7 @@ public class BeanDefinitionXMLParser {
         else {
 
 
-            info.setBean(StringUtils.isNotBlank(element.getAttribute("ref")));
+            info.setType(StringUtils.isNotBlank(element.getAttribute("ref")) ? BEAN_REF : VALUE);
 
             info.setRef(element.getAttribute("ref"));
 
