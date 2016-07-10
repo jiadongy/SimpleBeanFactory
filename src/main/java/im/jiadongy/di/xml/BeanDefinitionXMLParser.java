@@ -73,7 +73,7 @@ public class BeanDefinitionXMLParser implements BeanDefinitionParser {
 
     private BeanDefinition parseBeanNode(Element element) throws SimpleDIException {
         if (StringUtils.isBlank(element.getAttribute("id")) && StringUtils.isBlank(element.getAttribute("class")))
-            throw new SimpleDIException("attr id or class missing");
+            throw new SimpleDIException("parser : attr id or class missing");
 
         BeanDefinition definition;
         if (StringUtils.isBlank(element.getAttribute("id"))) {
@@ -118,7 +118,7 @@ public class BeanDefinitionXMLParser implements BeanDefinitionParser {
         Property info = new Property();
 
         if (StringUtils.isBlank(element.getAttribute("name")))
-            throw new SimpleDIException("attr name missing");
+            throw new SimpleDIException("parser : attr name missing");
 
         NodeList nodeList = element.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
@@ -132,9 +132,9 @@ public class BeanDefinitionXMLParser implements BeanDefinitionParser {
         }
 
         if (StringUtils.isBlank(element.getAttribute("value")) && StringUtils.isBlank(element.getAttribute("ref")))
-            throw new SimpleDIException("attr value or ref missing");
+            throw new SimpleDIException("parser : attr value or ref missing");
         else if (StringUtils.isNotBlank(element.getAttribute("value")) && StringUtils.isNotBlank(element.getAttribute("ref")))
-            throw new SimpleDIException("attr value or ref duplicate");
+            throw new SimpleDIException("parser : attr value or ref duplicate");
 
         info.setName(element.getAttribute("name"));
 
@@ -162,9 +162,9 @@ public class BeanDefinitionXMLParser implements BeanDefinitionParser {
         }
 
         if (StringUtils.isBlank(element.getAttribute("value")) && StringUtils.isBlank(element.getAttribute("ref")))
-            throw new SimpleDIException("attr value or ref missing");
+            throw new SimpleDIException("parser : attr value or ref missing");
         else if (StringUtils.isBlank(element.getAttribute("value")) && StringUtils.isBlank(element.getAttribute("ref")))
-            throw new SimpleDIException("attr value or ref duplicate");
+            throw new SimpleDIException("parser : attr value or ref duplicate");
 
         else {
 
