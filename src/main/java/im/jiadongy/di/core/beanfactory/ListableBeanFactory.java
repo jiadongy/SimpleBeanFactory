@@ -7,5 +7,7 @@ import java.util.List;
  */
 public interface ListableBeanFactory extends BeanFactory {
 
-    <T> List<T> getAllBeans();
+    <T> List<T> getAllBeans(Class<T> clazz);
+
+    List<Object> getAllBeans();
 }

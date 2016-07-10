@@ -5,20 +5,26 @@ package im.jiadongy.di.core.definition;
  */
 public class Property {
 
-    private boolean isBean;
+    public static final int VALUE = 0;
+    public static final int BEAN_REF = 1;
+    public static final int BEAN_DEFINITION = 2;
 
     private String name;
+
+    private int type;
 
     private String ref;
 
     private String value;
 
-    public boolean isBean() {
-        return isBean;
+    private BeanDefinition definition;
+
+    public BeanDefinition getDefinition() {
+        return definition;
     }
 
-    public void setBean(boolean bean) {
-        isBean = bean;
+    public void setDefinition(BeanDefinition definition) {
+        this.definition = definition;
     }
 
     public String getName() {
@@ -45,4 +51,11 @@ public class Property {
         this.value = value;
     }
 
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
 }

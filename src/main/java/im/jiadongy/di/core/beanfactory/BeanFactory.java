@@ -5,8 +5,10 @@ package im.jiadongy.di.core.beanfactory;
  */
 public interface BeanFactory {
 
-    <T> T getBean(String beanId);
+    <T> T getBean(String beanId, Class<T> requiredType) throws Exception;
 
-    <T> T getBean(Class<?> clazz);
+    Object getBean(String beanId) throws Exception;
+
+    <T> T getBean(Class<T> clazz) throws Exception;
 
 }

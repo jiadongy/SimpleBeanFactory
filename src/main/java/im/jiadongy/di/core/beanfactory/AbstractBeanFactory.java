@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static im.jiadongy.di.core.definition.ConstructorArgs.BEAN_DIFINITION;
+import static im.jiadongy.di.core.definition.ConstructorArgs.BEAN_DEFINITION;
 import static im.jiadongy.di.core.definition.ConstructorArgs.BEAN_REF;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -22,20 +22,30 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager implements BeanFactory {
 
-    private Map<String, BeanWrapper> beanMap = new ConcurrentHashMap<>();
-    private Map<String, Set<BeanWrapper>> beanTypeMap = new ConcurrentHashMap<>();
+    protected Map<String, BeanWrapper> beanMap = new ConcurrentHashMap<>();
+    protected Map<String, Set<BeanWrapper>> beanTypeMap = new ConcurrentHashMap<>();
 
     private Set<BeanDefinition> createInProgress = new HashSet<>();
     private Set<BeanDefinition> createFinished = new HashSet<>();
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> T getBean(String beanId) {
-        return null;
+    public <T> T getBean(String beanId, Class<T> requiredType) throws Exception {
+        return (T) beanMap.get(beanId).getObj();
     }
 
     @Override
-    public <T> T getBean(Class<?> clazz) {
-        return null;
+    public Object getBean(String beanId) throws Exception {
+        return beanMap.get(beanId).getObj();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T getBean(Class<T> clazz) throws Exception {
+        Set<BeanWrapper> wrappers = beanTypeMap.get(clazz.getName());
+        if (wrappers.size() != 1)
+            throw new SimpleDIException("get more than one bean by class " + clazz.getName());
+        return (T) wrappers.iterator().next().getObj();
     }
 
     protected void startCreateBeans(Collection<BeanDefinition> list) throws Exception {
@@ -50,8 +60,7 @@ abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager 
         }
     }
 
-
-    protected BeanWrapper createBean(BeanDefinition definition) throws Exception {
+    private BeanWrapper createBean(BeanDefinition definition) throws Exception {
 
         boolean isIdBlank = isBlank(definition.getId()),
                 isClazzBlank = isBlank(definition.getClazz()),
@@ -95,9 +104,10 @@ abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager 
                 if (!factoryMethods.stream().anyMatch(method -> {
                     try {
                         List<Object> realParameters = parseActualConstructorParameters(method.getParameterTypes(), parameters);
-                        //papi java.lang.IllegalArgumentException: argument type mismatch
-                        wrapper.setObj(method.invoke(factory, realParameters.size() == 0 ? null : realParameters));
+                        //papi java.lang.IllegalArgumentException: argument type mismatch : 接受一个数组,传入list就错了!!
+                        wrapper.setObj(method.invoke(factory, realParameters.toArray()));
                         wrapper.setClazz(method.getReturnType());
+                        return true;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -152,12 +162,16 @@ abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager 
         if (!properties.stream().allMatch(property -> {
             try {
                 if (clazz.isInstance(wrapper.getObj())) {
-                    Field field = clazz.getField(property.getName());
-                    if (!field.isAccessible())
-                        field.setAccessible(true);
+                    //papi primitiveType.getDeclaredField可以, primitiveType.getField报NoSuchFieldException ?? //pipa getField只能获得public字段!!
+                    Field field = clazz.getDeclaredField(property.getName());
+                    field.setAccessible(true);
+                    //pipa Field.getDeclaringClass 获得Field所在实例的class,用getType获得其基本类型的class
                     field.set(wrapper.getObj(),
-                            parseParameter(property.isBean(), property.isBean() ? property.getRef() : property.getValue(),
-                                    field.getDeclaringClass()));
+                            property.getType() == Property.BEAN_DEFINITION ?
+                                    createBean(wrapper.getDefinition()).getObj() :
+                                    parseParameter(property.getType() == Property.BEAN_REF,
+                                            property.getType() == Property.BEAN_REF ? property.getRef() : property.getValue(),
+                                            field.getType()));
                     return true;
                 }
             } catch (Exception e) {
@@ -185,7 +199,7 @@ abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager 
             else
                 refOrValue = args.getValue();
 
-            res.add(type == BEAN_DIFINITION ?
+            res.add(type == BEAN_DEFINITION ?
                     createBean(args.getDefinition()).getObj() :
                     parseParameter(type == BEAN_REF, refOrValue, parameterTypes[i])
             );
@@ -195,26 +209,27 @@ abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager 
     }
 
 
-    private Object parsePrimitiveParameter(String s, Class<?> clazz) throws SimpleDIException {
+    private java.io.Serializable parsePrimitiveParameter(String s, Class<?> primitiveType) throws SimpleDIException {
         try {
-            if (clazz == Integer.class)
+            //pipa primitiveType == Integer.class是不行的,因为Field只能获得type也就是其基本类型"int","boolean"等
+            if (primitiveType == int.class)
                 return Integer.parseInt(s);
-            else if (clazz == Short.class)
+            else if (primitiveType == short.class)
                 return Short.parseShort(s);
-            else if (clazz == Long.class)
+            else if (primitiveType == long.class)
                 return Long.parseLong(s);
-            else if (clazz == Byte.class)
+            else if (primitiveType == byte.class)
                 return Byte.parseByte(s);
-            else if (clazz == Boolean.class)
+            else if (primitiveType == boolean.class)
                 return Boolean.parseBoolean(s);
-            else if (clazz == Float.class)
+            else if (primitiveType == float.class)
                 return Float.parseFloat(s);
-            else if (clazz == Double.class)
+            else if (primitiveType == double.class)
                 return Double.parseDouble(s);
-            else if (clazz == Character.class)
+            else if (primitiveType == char.class)
                 return s.charAt(0);
         } catch (Exception e) {
-            throw new SimpleDIException("parsePrimitive fail with " + s + " -> " + clazz.getName(), e);
+            throw new SimpleDIException("parsePrimitive fail with " + s + " -> " + primitiveType.getName(), e);
         }
 
         return s;
@@ -226,7 +241,7 @@ abstract public class AbstractBeanFactory extends AbstractBeanDefinitionManager 
             if (res.getClazz() == clazz)
                 return res.getObj();
             else
-                throw new SimpleDIException("creator : type of bean created not match clazz " + clazz.getName());
+                throw new SimpleDIException("creator : type of bean created not match primitiveType " + clazz.getName());
         } else
             return parsePrimitiveParameter(refOrValue, clazz);
     }

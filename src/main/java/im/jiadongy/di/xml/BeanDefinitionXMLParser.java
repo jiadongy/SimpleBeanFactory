@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static im.jiadongy.di.core.definition.ConstructorArgs.*;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Created by jiadongy on 16/7/8.
@@ -113,19 +114,31 @@ public class BeanDefinitionXMLParser implements BeanDefinitionParser {
     }
 
     private Property parsePropertyNode(Element element) throws SimpleDIException {
+
+        Property info = new Property();
+
         if (StringUtils.isBlank(element.getAttribute("name")))
             throw new SimpleDIException("attr name missing");
+
+        NodeList nodeList = element.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE && nodeList.item(i).getNodeName().equalsIgnoreCase("bean")) {
+                Element e = (Element) nodeList.item(i);
+                BeanDefinition definition = parseBeanNode(e);
+                info.setType(Property.BEAN_DEFINITION);
+                info.setDefinition(definition);
+                return info;
+            }
+        }
 
         if (StringUtils.isBlank(element.getAttribute("value")) && StringUtils.isBlank(element.getAttribute("ref")))
             throw new SimpleDIException("attr value or ref missing");
         else if (StringUtils.isNotBlank(element.getAttribute("value")) && StringUtils.isNotBlank(element.getAttribute("ref")))
             throw new SimpleDIException("attr value or ref duplicate");
 
-        Property info = new Property();
-
         info.setName(element.getAttribute("name"));
 
-        info.setBean(StringUtils.isNotBlank(element.getAttribute("ref")));
+        info.setType(isNotBlank(element.getAttribute("ref")) ? Property.BEAN_REF : Property.VALUE);
 
         info.setRef(element.getAttribute("ref"));
 
@@ -142,7 +155,7 @@ public class BeanDefinitionXMLParser implements BeanDefinitionParser {
             if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE && nodeList.item(i).getNodeName().equalsIgnoreCase("bean")) {
                 Element e = (Element) nodeList.item(i);
                 BeanDefinition definition = parseBeanNode(e);
-                info.setType(BEAN_DIFINITION);
+                info.setType(BEAN_DEFINITION);
                 info.setDefinition(definition);
                 return info;
             }

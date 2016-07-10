@@ -8,7 +8,7 @@ public class ConstructorArgs {
     public static final int VALUE = 0;
     public static final int PROPERTY = 1;
     public static final int BEAN_REF = 2;
-    public static final int BEAN_DIFINITION = 3;
+    public static final int BEAN_DEFINITION = 3;
 
 
     private int type = VALUE;
